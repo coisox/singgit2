@@ -1,12 +1,13 @@
 <template>
 	<div>
-		<div class="my-header">
+		<div class="my-header btn-primary">
 			<span>Statistic {{month.format('MMM YYYY')}}</span>
 		</div>
 		<div class="my-container">
+
 			<ul class="list-group">
 				<li class="list-group-item d-flex justify-content-between btn-primary text-white">
-					<span>Current Balance</span>
+					<span @click="zoonAccount()">Current Balance</span>
 					<span :class="{'text-pink':balances_total<0}">{{toCurrency(balances_total)}}</span>
 				</li>
 				<li class="list-group-item bg-light d-none d-lg-block">
@@ -19,20 +20,21 @@
 				</li>
 				<li class="list-group-item" v-for="(amount, account) in balances" :key="account">
 					<div class="row">
-						<div class="col text-nowrap">{{account}}</div>
+						<div class="col text-nowrap" @click="zoonAccount(account)">{{account}}</div>
 						<div class="col text-end" :class="{'text-danger':amount<0, 'text-success':amount>=0}">{{toCurrency(amount)}}</div>
 						<div class="col d-none d-lg-block"><input type="number" step="0.01" class="w-100 text-end border-0 p-0" v-model="actual[account]" @change="saveToLS()" style="background:transparent;"></div>
 						<div class="col d-none d-lg-block text-end" :class="{'text-danger':diff[account]<0, 'text-success':diff[account]>=0}">{{toCurrency(diff[account])}}</div>
 					</div>
 				</li>
 			</ul>
+
 			<ul class="list-group mt-3">
 				<li class="list-group-item d-flex justify-content-between btn-primary text-white">
-					<span>Income/Expenses</span>
-					<span :class="{'text-pink':expenses_total<0}">{{toCurrency(expenses_total)}}</span>
+					<span @click="zoonCategory()">Income/Expenses</span>
+					<span :class="{'text-danger':expenses_total<0}">{{toCurrency(expenses_total)}}</span>
 				</li>
-				<li class="list-group-item d-flex justify-content-between" v-for="item in expenses" :key="item.category" @click="gotoTransactions(item.category)">
-					<span>{{item.category}}</span>
+				<li class="list-group-item d-flex justify-content-between" v-for="item in expenses" :key="item.category">
+					<span @click="zoonCategory(item.category)">{{item.category}}</span>
 					<span :class="{'text-danger':item.amount<0, 'text-success':item.amount>=0}">{{toCurrency(item.amount)}}</span>
 				</li>
 			</ul>
@@ -52,9 +54,9 @@
 			<div class="modal-dialog modal-sm">
 				<div class="modal-content">
 					<div class="modal-body">
-						<button type="button" class="btn btn-primary w-100 mb-1" @click="backup('export_1_week')" :disabled="backup_progress" style="height:38px;"><div class="spinner-border spinner-border-sm" v-if="backup_progress"></div><span v-else>Export 1 Week</span></button>
+						<!-- <button type="button" class="btn btn-primary w-100 mb-1" @click="backup('export_1_week')" :disabled="backup_progress" style="height:38px;"><div class="spinner-border spinner-border-sm" v-if="backup_progress"></div><span v-else>Export 1 Week</span></button>
 						<button type="button" class="btn btn-primary w-100 mb-1" @click="backup('export_1_month')" :disabled="backup_progress" style="height:38px;"><div class="spinner-border spinner-border-sm" v-if="backup_progress"></div><span v-else>Export 1 Month</span></button>
-						<button type="button" class="btn btn-primary w-100 mb-1" @click="backup('export_3_month')" :disabled="backup_progress" style="height:38px;"><div class="spinner-border spinner-border-sm" v-if="backup_progress"></div><span v-else>Export 3 Month</span></button>
+						<button type="button" class="btn btn-primary w-100 mb-1" @click="backup('export_3_month')" :disabled="backup_progress" style="height:38px;"><div class="spinner-border spinner-border-sm" v-if="backup_progress"></div><span v-else>Export 3 Month</span></button> -->
 						<button type="button" class="btn btn-primary w-100 mb-1" @click="backup('export_everything')" :disabled="backup_progress" style="height:38px;"><div class="spinner-border spinner-border-sm" v-if="backup_progress"></div><span v-else>Export Everything</span></button>
 						<button type="button" class="btn btn-danger w-100" @click="backup('import')" :disabled="backup_progress" style="width:80px; height:38px;"><div class="spinner-border spinner-border-sm" v-if="backup_progress"></div><span v-else>Import</span></button>
 					</div>
@@ -64,10 +66,6 @@
 
 	</div>
 </template>
-
-<style scoped>
-	
-</style>
 
 <script>
 	import moment from 'moment'
@@ -248,14 +246,25 @@
 							tbl_transactions.date.lt(me.month.format('YYYY-MM-99'))
 						)
 					).
+					orderBy(tbl_transactions.category, lf.Order.DESC).
 					groupBy(tbl_transactions.category).
 					exec().
 				then(function(results) {
 					me.expenses = results
-					me.expenses_total = me.fixDecimal(results.reduce((t,i)=>{return t+i.amount}, 0))
+					me.expenses_total = results.reduce((t,i)=>{return t+i.amount}, 0)
 				})
 			},
-			gotoTransactions: function(category) {
+			zoonAccount: function(account) {
+				this.$router.push({
+					name: 'transactions',
+					params: {
+						filter_date_from: this.month.startOf('month').format('YYYY-MM-DD'),
+						filter_date_to: this.month.endOf('month').format('YYYY-MM-DD'),
+						filter_account: account
+					}
+				})
+			},
+			zoonCategory: function(category) {
 				this.$router.push({
 					name: 'transactions',
 					params: {
@@ -277,7 +286,7 @@
 
 			//to stick my entry even refresh
 			var Statistic_actual = JSON.parse(localStorage.getItem('Statistic_actual') || '{}')
-			this.accounts.forEach(i=>{ me.actual[i] = Statistic_actual[i] || 0 })
+			this.accounts.forEach(i=>{ me.actual[i] = Statistic_actual[i] || '' })
 		}
 	}
 </script>

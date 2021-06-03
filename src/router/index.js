@@ -15,7 +15,7 @@ export default new VueRouter({
 			component: () => import('../views/Form.vue')
 		},
 		{
-			path: '/transactions/:filter_date_from?/:filter_date_to?/:filter_category?',
+			path: '/transactions/:filter_date_from?/:filter_date_to?/:filter_category?/:filter_account?',
 			name: 'transactions',
 			component: () => import('../views/Transactions.vue')
 		},

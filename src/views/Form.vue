@@ -1,6 +1,6 @@
 <template>
 	<div @click="autosuggest_list=[]">
-		<div class="my-header">
+		<div class="my-header btn-primary">
 			<span>New Transaction</span>
 			<span>{{version}}</span>
 		</div>
